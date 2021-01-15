@@ -70,6 +70,11 @@
       networks:
       - name: '{{ vm_network }}'
         device_type: e1000
+#      customvalues:
+#      - key: "option_name"
+#        value: "option_value"
+#      - key: "another_option_name_if_needed"
+#        value: "the_other_options_value"
       wait_for_ip_address: no
     delegate_to: localhost
     register: deploy_vm
@@ -91,6 +96,9 @@
         - floppy
     delegate_to: localhost
     register: vm_boot_order
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
   - name: Adding VMX Entry - floppy0.fileType
     lineinfile:
       path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
@@ -132,13 +140,13 @@
     delay: 15
     register: result           
     until: result is succeeded 
-- name: Customize Guest
-  hosts: localhost 
-  gather_facts: false
-  vars_files: 
-    - vars-dc1.yml
-    - vars-esx.yml
-  tasks: 
+# - name: Customize Guest
+#   hosts: localhost 
+#   gather_facts: false
+#   vars_files: 
+#     - vars-dc1.yml
+#     - vars-esx.yml
+#   tasks: 
   - name: Set password via vmware_vm_shell
     local_action:
       module: vmware_vm_shell

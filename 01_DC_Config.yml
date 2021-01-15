@@ -1,0 +1,158 @@
+---
+- name: Create new Active-Directory Domain & Forest
+  hosts: localhost
+  vars:
+    esxi_login: &esxi_login
+      hostname: '{{ esxi_address }}'
+      username: '{{ esxi_username }}'
+      password: '{{ esxi_password }}'   
+      validate_certs: no 
+    vm_login: &vm_login
+      vm_username: ".\\Administrator"
+      vm_password: '{{ vm_password_new }}'
+      vm_id: '{{ vm_name }}'
+    retry_settings: &retry_settings
+      retries: 6
+      delay: 10 
+      register: result           
+      until: result is succeeded   
+  vars_files:
+   - vars-dc1.yml
+   - vars-esx.yml
+  gather_facts: no
+  tasks:
+  - name: Configure upstream DNS via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})"'
+      wait_for_process: true
+    <<: *retry_settings
+  - name: Disable firewall for Domain, Public and Private profiles
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False)"'
+      wait_for_process: true
+    <<: *retry_settings
+  - name: Install AD-Domain-Services
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Install-windowsfeature AD-domain-services)"'
+      wait_for_process: true
+    <<: *retry_settings
+  - name: Install RSAT-ADDS
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Install-windowsfeature RSAT-ADDS)"'
+      wait_for_process: true
+    <<: *retry_settings
+# Install-ADDSForest -DomainName "corp.contoso.com" -InstallDNS -NoRebootOnCompletion:$true -SafeModeAdministratorPassword $(convertto-securestring "P@ssw0rd" -AsPlainText -Force) -force
+  - name: Create Domain
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Install-ADDSForest -DomainName {{vm_domain}} -InstallDNS -NoRebootOnCompletion -SafeModeAdministratorPassword $(convertto-securestring {{ vm_password_new }} -AsPlainText -Force) -Force -WarningAction silentlyContinue)"'
+      wait_for_process: true
+    <<: *retry_settings
+    ignore_errors: yes #This step always returns a vix error
+  - name: Reboot-Guest
+    vmware_guest_powerstate:
+      <<: *esxi_login 
+      name: '{{ vm_name }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+  - name: Wait for 60 seconds
+    wait_for: timeout=60
+    delegate_to: localhost
+  - name: Wait for VMware tools to become available by name
+    vmware_guest_tools_wait:
+      <<: *esxi_login
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+  - name: Wait for 30 seconds for VMware Tools refresh
+    wait_for: timeout=30
+    delegate_to: localhost
+  - name: Find the VM's IP Address via VMware tools
+    vmware_guest_facts:
+      <<: *esxi_login
+      datacenter: ha-datacenter
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    register: vmfacts
+  - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"  
+  - name: Configure Internal DNS via vmware_vm_shell
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses 127.0.0.1)"'
+      wait_for_process: true
+    <<: *retry_settings
+  # set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0  
+  - name: Enable Remote Desktop
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
+      wait_for_process: true
+    <<: *retry_settings
+  # Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+  - name: Enable Remote Desktop Firewall Rule
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
+      vm_shell_args: "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
+      wait_for_process: true
+    <<: *retry_settings
+##############################
+# Config / Integration Steps #
+##############################
+#Add-DnsServerResourceRecordA -Name "host23" -ZoneName "contoso.com" -AllowUpdateAny -IPv4Address "172.18.99.23" -TimeToLive 01:00:00
+  # - name: Create DNS record for ESXi
+  #   win_dns_record:
+  #     name: '{{ esxi_hostname }}'
+  #     type: "A"
+  #     state: present
+  #     value: '{{ esxi_address }}'
+  #     zone: '{{ lab_domain }}'
+  #   delegate_to: "{{ dc_address }}"
+  # - name: Create DNS record for vCenter
+  #   win_dns_record:
+  #     name: '{{ vcenter_hostname }}'
+  #     type: "A"
+  #     state: present
+  #     value: '{{ vcenter_address }}'
+  #     zone: '{{ lab_domain }}'
+  #   delegate_to: "{{ dc_address }}"
+  # - name: Create DNS record for ONTAP
+  #   win_dns_record:
+  #     name: '{{ ontap_hostname }}'
+  #     type: "A"
+  #     state: present
+  #     value: '{{ ontap_address }}'
+  #     zone: '{{ lab_domain }}'
+  #   delegate_to: "{{ dc_address }}"
+
