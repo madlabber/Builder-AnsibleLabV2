@@ -1,0 +1,16 @@
+windows_iso: "17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+windows_iso_url: "https://software-download.microsoft.com/download/pr/17763.737.190906-2324.rs5_release_svc_refresh_SERVER_EVAL_x64FRE_en-us_1.iso"
+windows_flp: server2019eval.flp
+windows_flp_url: "http://github.madlabber.com/server2019eval.flp"
+vm_name: lab_ansible_v2_dc01
+vm_hostname: dc01
+vm_disk_gb: 40
+vm_memory_mb: 2048
+vm_num_cpus: 2
+vm_network: "lab_ansible_v2_1"
+vm_password_old: Changeme!
+vm_password_new: P@ssw0rd
+vm_address: 192.168.0.11
+vm_netmask_cidr: 24
+vm_gateway: 192.168.0.1
+vm_dns_server: 192.168.0.1
