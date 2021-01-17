@@ -53,10 +53,10 @@
     args:
       creates: '/vmfs/volumes/{{ esxi_datastore }}/{{ centos_iso }}'
     delegate_to: '{{ esxi_address }}'
-  - name: Download the autounattend floppy .flp
-    shell: 'wget -P /vmfs/volumes/{{ esxi_datastore }} {{ centos_flp_url }}'
+  - name: Download the config iso
+    shell: 'wget -P /vmfs/volumes/{{ esxi_datastore }} {{ centos_config_iso_url }}'
     args:
-      creates: '/vmfs/volumes/{{ esxi_datastore }}/{{ centos_flp }}'
+      creates: '/vmfs/volumes/{{ esxi_datastore }}/{{ centos_config_iso }}'
     delegate_to: '{{ esxi_address }}'
   - name: Create a new VM
     vmware_guest:
@@ -64,10 +64,18 @@
       folder: /
       name: '{{ vm_name }}'
       state: present
-      guest_id: windows9Server64Guest
+      guest_id: centos7_64Guest
       cdrom:
-        type: iso
-        iso_path: '[{{ esxi_datastore }}] {{ centos_iso }}'
+          - controller_number: 0
+            unit_number: 0
+            state: present
+            type: iso
+            iso_path: '[{{ esxi_datastore }}] {{ centos_iso }}'
+          - controller_number: 0
+            unit_number: 1
+            state: present
+            type: iso
+            iso_path: '[{{ esxi_datastore }}] {{ centos_config_iso }}'
       disk:
       - size_gb: '{{ vm_disk_gb }}'
         type: thin
@@ -79,15 +87,9 @@
       networks:
       - name: '{{ vm_network }}'
         device_type: e1000
-#      customvalues:
-#      - key: "option_name"
-#        value: "option_value"
-#      - key: "another_option_name_if_needed"
-#        value: "the_other_options_value"
       wait_for_ip_address: no
     delegate_to: localhost
     register: deploy_vm
-#  - debug: msg="{{deploy_vm}}"
   - name: Change virtual machine's boot order and related parameters
     vmware_guest_boot_manager:
       <<: *esxi_login 
@@ -99,31 +101,12 @@
       boot_firmware: bios
       secure_boot_enabled: False
       boot_order:
-        - cdrom
         - disk
+        - cdrom
         - ethernet
         - floppy
     delegate_to: localhost
     register: vm_boot_order
-  - name: Wait for 30 seconds
-    wait_for: timeout=30
-    delegate_to: localhost
-  - name: Adding VMX Entry - floppy0.fileType
-    lineinfile:
-      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
-      line: 'floppy0.fileType = "file"'
-    delegate_to: '{{ esxi_address }}'
-  - name: Adding VMX Entry - floppy0.fileName
-    lineinfile:
-      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
-      line: 'floppy0.fileName = "/vmfs/volumes/{{ esxi_datastore }}/{{ centos_flp }}"'
-    delegate_to: '{{ esxi_address }}'
-  - name: Removing VMX Entry - floppy0.present = "FALSE"
-    lineinfile:
-      path: '/vmfs/volumes/{{ esxi_datastore }}/{{ vm_name }}/{{ vm_name }}.vmx'
-      line: 'floppy0.present = "FALSE"'
-      state: absent
-    delegate_to: '{{ esxi_address }}'
   - name: Restore original service states
     vmware_host_service_manager:
       <<: *esxi_login
@@ -149,13 +132,6 @@
     delay: 15
     register: result           
     until: result is succeeded 
-# - name: Customize Guest
-#   hosts: localhost 
-#   gather_facts: false
-#   vars_files: 
-#     - vars-dc1.yml
-#     - vars-esx.yml
-#   tasks: 
   - name: Test vmware_vm_shell
     local_action:
       module: vmware_vm_shell
@@ -163,82 +139,83 @@
       <<: *vm_login
       vm_password: '{{ vm_password_old }}'
       vm_shell: '/usr/bin/sh'
-      vm_shell_args: '-c "reboot"'
+      vm_shell_args: '-c "echo hello"'
       wait_for_process: true
-  #   ignore_errors: yes
-  # - name: Configure IP address via vmware_vm_shell
-  #   local_action:
-  #     module: vmware_vm_shell
-  #     <<: *esxi_login
-  #     <<: *vm_login
-  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-  #     vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})"' 
-  #     wait_for_process: true
-  # - name: Configure DNS via vmware_vm_shell
-  #   local_action:
-  #     module: vmware_vm_shell
-  #     <<: *esxi_login
-  #     <<: *vm_login
-  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-  #     vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})"'
-  #     wait_for_process: true
-  # # set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0  
-  # - name: Enable Remote Desktop
-  #   local_action:
-  #     module: vmware_vm_shell
-  #     <<: *esxi_login
-  #     <<: *vm_login
-  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-  #     vm_shell_args: "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
-  #     wait_for_process: true
-  #   <<: *retry_settings
-  # # Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-  # - name: Enable Remote Desktop Firewall Rule
-  #   local_action:
-  #     module: vmware_vm_shell
-  #     <<: *esxi_login
-  #     <<: *vm_login
-  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-  #     vm_shell_args: "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
-  #     wait_for_process: true
-  #   <<: *retry_settings
-  # - name: Rename Computer via vmware_vm_shell
-  #   local_action:
-  #     module: vmware_vm_shell
-  #     <<: *esxi_login
-  #     <<: *vm_login
-  #     vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-  #     vm_shell_args: '-command "(Rename-Computer -NewName {{ vm_hostname }})"'
-  #     wait_for_process: true
-  # - name: Reboot-Guest
-  #   vmware_guest_powerstate:
-  #     <<: *esxi_login 
-  #     name: '{{ vm_name }}'
-  #     state: reboot-guest
-  #   delegate_to: localhost
-  #   register: deploy
-  # - name: Wait for 30 seconds
-  #   wait_for: timeout=30
-  #   delegate_to: localhost
-  # - name: Wait for VMware tools to become available by name
-  #   vmware_guest_tools_wait:
-  #     <<: *esxi_login
-  #     name: '{{ vm_name }}'
-  #   delegate_to: localhost
-  #   retries: 3
-  #   delay: 15
-  #   register: result           
-  #   until: result is succeeded 
-  # - name: Wait for 30 seconds for VMware Tools refresh
-  #   wait_for: timeout=30
-  #   delegate_to: localhost
-  # - name: Find the VM's IP Address via VMware tools
-  #   vmware_guest_facts:
-  #     <<: *esxi_login
-  #     datacenter: ha-datacenter
-  #     name: '{{ vm_name }}'
-  #   delegate_to: localhost
-  #   register: vmfacts
-  # - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
+  - name: Set Hostname
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_password: '{{ vm_password_old }}'
+      vm_shell: '/usr/bin/sh'
+      vm_shell_args: "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
+      wait_for_process: true
+  - name: Set IP Address
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_password: '{{ vm_password_old }}'
+      vm_shell: '/usr/bin/sh'
+      vm_shell_args: "-c \"nmcli connection modify ens32 IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
+      wait_for_process: true 
+  - name: Set DNS
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_password: '{{ vm_password_old }}'
+      vm_shell: '/usr/bin/sh'
+      vm_shell_args: "-c \"nmcli connection modify ens32 IPv4.dns {{vm_dns_server}}\""
+      wait_for_process: true  
+  - name: Set Admin Passwd
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_password: '{{ vm_password_old }}'
+      vm_shell: '/usr/bin/sh'
+      vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+      wait_for_process: true  
+  - name: Set root Passwd
+    local_action:
+      module: vmware_vm_shell
+      <<: *esxi_login
+      <<: *vm_login
+      vm_password: '{{ vm_password_old }}'
+      vm_shell: '/usr/bin/sh'
+      vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin root\""
+      wait_for_process: true  
+    ignore_errors: yes
+  - name: Reboot-Guest
+    vmware_guest_powerstate:
+      <<: *esxi_login 
+      name: '{{ vm_name }}'
+      state: reboot-guest
+    delegate_to: localhost
+    register: deploy
+  - name: Wait for 30 seconds
+    wait_for: timeout=30
+    delegate_to: localhost
+  - name: Wait for VMware tools to become available by name
+    vmware_guest_tools_wait:
+      <<: *esxi_login
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    retries: 3
+    delay: 15
+    register: result           
+    until: result is succeeded 
+  - name: Wait for 30 seconds for VMware Tools refresh
+    wait_for: timeout=30
+    delegate_to: localhost
+  - name: Find the VM's IP Address via VMware tools
+    vmware_guest_facts:
+      <<: *esxi_login
+      datacenter: ha-datacenter
+      name: '{{ vm_name }}'
+    delegate_to: localhost
+    register: vmfacts
+  - debug: msg="IP Address - {{ vmfacts['instance']['ipv4'] }}"   
 
 
