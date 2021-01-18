@@ -3,4 +3,5 @@ esxi_username: root
 esxi_password: P@ssw0rd
 esxi_fqdn: esx49.schlab.pri
 esxi_datastore: lab_ansible_v2
+iso_datastore: "ISOs"
 
