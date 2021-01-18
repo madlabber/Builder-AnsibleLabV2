@@ -91,7 +91,7 @@
     wait_for: timeout=30
     delegate_to: localhost
   - name: Find the VM's IP Address via VMware tools
-    vmware_guest_facts:
+    community.vmware.vmware_guest_info:
       <<: *esxi_login
       datacenter: ha-datacenter
       name: '{{ vm_name }}'

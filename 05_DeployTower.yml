@@ -6,4 +6,3 @@
   - include_vars: vars-tower.yml 
   - include_vars: vars-esx.yml
 - import_playbook: DeployCentOSVM.yml
-

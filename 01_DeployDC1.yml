@@ -1,0 +1,8 @@
+---
+- name: Create Windows VM - dc1
+  hosts: localhost
+  gather_facts: no
+  tasks: 
+  - include_vars: vars-dc1.yml 
+  - include_vars: vars-esx.yml
+- import_playbook: DeployWinVM.yml

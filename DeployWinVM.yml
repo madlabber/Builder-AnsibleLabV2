@@ -194,49 +194,21 @@
       wait_for_process: true
     delegate_to: localhost
     ignore_errors: yes
-  - name: Configure IP address via vmware_vm_shell
+  - name: Run PowerShell commands via vm_shell
     community.vmware.vmware_vm_shell:
       <<: *esxi_login
       <<: *vm_login
       vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})"' 
+      vm_shell_args: "{{item}}"
       wait_for_process: true
     delegate_to: localhost
-  - name: Configure DNS via vmware_vm_shell
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})"'
-      wait_for_process: true
-    delegate_to: localhost 
-  - name: Enable Remote Desktop
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
-      wait_for_process: true
-    delegate_to: localhost
-    <<: *retry_settings
-  # Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-  - name: Enable Remote Desktop Firewall Rule
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
-      wait_for_process: true
-    delegate_to: localhost
-    <<: *retry_settings
-  - name: Rename Computer via vmware_vm_shell
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: 'c:\windows\system32\windowspowershell\v1.0\powershell.exe'
-      vm_shell_args: '-command "(Rename-Computer -NewName {{ vm_hostname }})"'
-      wait_for_process: true
-    delegate_to: localhost
+    <<: *retry_settings    
+    loop:
+      - "-command \"(new-netipaddress -InterfaceAlias Ethernet0 -IPAddress {{ vm_address }} -prefixlength {{vm_netmask_cidr}} -defaultgateway {{ vm_gateway }})\""
+      - "-command \"(Set-DnsClientServerAddress -InterfaceAlias Ethernet0 -ServerAddresses {{ vm_dns_server }})\""
+      - "-command \"(set-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -name fDenyTSConnections -Value 0)\""
+      - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
+      - "-command \"(Rename-Computer -NewName {{ vm_hostname }})\""
   - name: Reboot-Guest
     community.vmware.vmware_guest_powerstate:
       <<: *esxi_login 

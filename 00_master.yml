@@ -1,0 +1,14 @@
+---
+- hosts: localhost
+  gather_facts: false
+  tasks:
+- name: Deploy VM - DC1
+  import_playbook: 01_DeployDC1.yml
+- name: Configure Active Directory
+  import_playbook: 02_BuildAD.yml
+- name: Deploy VM - CentOS1
+  import_playbook: 03_DeployCentOS1.yml
+- name: Deploy VM - Win1
+  import_playbook: 04_DeployWin1.yml
+- name: Deploy VM - Tower
+  import_playbook: 05_DeployTower.yml

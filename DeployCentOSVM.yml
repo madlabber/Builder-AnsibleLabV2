@@ -136,7 +136,7 @@
             unit_number: 0
             state: present
             type: iso
-            iso_path: '[{{ esxi_datastore }}] {{ install_iso }}'
+            iso_path: '[{{ iso_datastore }}] {{ install_iso }}'
           - controller_number: 0
             unit_number: 1
             state: present
@@ -185,8 +185,8 @@
       <<: *esxi_login
       name: '{{ vm_name }}'
     delegate_to: localhost
-    retries: 3
-    delay: 15
+    retries: 10
+    delay: 60
     register: result           
     until: result is succeeded
   - name: Set root Passwd
@@ -198,39 +198,19 @@
       wait_for_process: true
     delegate_to: localhost
     ignore_errors: yes   
-  - name: Set Admin Passwd
+  - name: Run shell command via vm_shell
     community.vmware.vmware_vm_shell:
       <<: *esxi_login
       <<: *vm_login
       vm_shell: '/usr/bin/sh'
-      vm_shell_args: "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+      vm_shell_args: "{{item}}"
       wait_for_process: true
     delegate_to: localhost  
-    ignore_errors: yes
-  - name: Set Hostname
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: '/usr/bin/sh'
-      vm_shell_args: "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
-      wait_for_process: true
-    delegate_to: localhost
-  - name: Set IP Address
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: '/usr/bin/sh'
-      vm_shell_args: "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
-      wait_for_process: true 
-    delegate_to: localhost
-  - name: Set DNS
-    community.vmware.vmware_vm_shell:
-      <<: *esxi_login
-      <<: *vm_login
-      vm_shell: '/usr/bin/sh'
-      vm_shell_args: "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
-      wait_for_process: true
-    delegate_to: localhost  
+    loop:
+      - "-c \"echo {{vm_password_new}} | passwd --stdin admin\""
+      - "-c \"hostnamectl set-hostname {{ vm_hostname }}.{{ vm_domain }}\""
+      - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.address {{vm_address}}/{{vm_netmask_cidr}} IPv4.gateway {{vm_gateway}} IPv4.method manual\""
+      - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
   - name: Reboot-Guest
     community.vmware.vmware_guest_powerstate:
       <<: *esxi_login 
