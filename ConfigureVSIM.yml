@@ -3,10 +3,7 @@
   name: Deploy ONTAP Simulator Single Node Cluster
   gather_facts: false
   vars:
-    vsim_ova: './OVA/vsim-netapp-DOT9.8-cm_nodar.ova'
     vm_name: lab_ansible_v2_vsim1
-    cluster_network: lab_ansible_v2_1
-    data_network: lab_ansible_v2_1
     ontap_cluster_mgmt_ip: 192.168.0.70
     ontap_node_mgmt_ip: 192.168.0.71
     ontap_netmask: 255.255.255.0
@@ -84,12 +81,13 @@
       - "{{ontap_password}}"
       - "{{ontap_password}}" # confirm password
       - "{{ontap_cluster_name}}"
-  - name: Press Enter
-    community.vmware.vmware_guest_sendkey:
-      <<: *esxi_login
-      name: "{{ vm_name }}"
-      keys_send: ENTER
-    delegate_to: localhost
+      - "" # This is here to force the enter key to be pressed
+  # - name: Press Enter
+  #   community.vmware.vmware_guest_sendkey:
+  #     <<: *esxi_login
+  #     name: "{{ vm_name }}"
+  #     keys_send: ENTER
+  #   delegate_to: localhost
   - name: Wait 120 seconds for cluster setup
     wait_for: timeout=120
     delegate_to: localhost
@@ -109,7 +107,7 @@
       - "{{ontap_dns_domain}}" 
       - "{{ontap_dns_server}}"
       - "{{ontap_location}}" # single node cluster yes|no
-      - " " # this final space is here to force the enter key after the preceding command
+      - "" # this is here to force the enter key after the preceding command
 
 
 

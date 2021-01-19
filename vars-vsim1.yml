@@ -1,6 +1,6 @@
 # Path to the Simulate ONTAP OVA File
 # Tested with 9.8, but 9.7 should also be compatible
-vsim_ova: './OVA/vsim-netapp-DOT9.8-cm_nodar.ova'
+vsim_ova: './Downloads/vsim-netapp-DOT9.8-cm_nodar.ova'
 
 # VM Name shown in vCenter inventory
 vm_name: lab_ansible_v2_vsim4
@@ -17,6 +17,7 @@ data_network: lab_ansible_v2_1
 # The serial number must be unique for each within a multi-node cluster
 # The serial number must correspond to an available set of license keys
 # The two current options are 408236-50-7, or 4034389-06-2
+# Other serials numbers may be used if the associated licenses are available
 # Note: the sysid is randomized by the playbook
 sys_serial_number: "4082368-50-7" 
 
@@ -30,6 +31,7 @@ vdevinit: "31:14:0,31:14:1,31:14:2,31:14:3" # (56x4gb 15k) 
 
 # Node Management IP Address
 # If specified the IP/Netmask/gateway will be assigned to the node
+# If empty, DHCP will be used
 ontap_node_mgmt_ip: "192.168.0.41"
 ontap_netmask: "255.255.255.0"
 ontap_gateway: "192.168.0.1" 

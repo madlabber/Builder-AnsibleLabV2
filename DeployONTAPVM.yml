@@ -3,7 +3,7 @@
   name: Deploy ONTAP Simulator 
   gather_facts: false
   vars:
-    vsim_ova: './OVA/vsim-netapp-DOT9.8-cm_nodar.ova'
+    vsim_ova: './Downloads/vsim-netapp-DOT9.8-cm_nodar.ova'
     vm_name: DataONTAP
     vm_memory_mb: 8192 
     vm_num_vcpus: 2
@@ -85,7 +85,7 @@
       - "setenv bootarg.vm.sim.vdevinit {{vdevinit}}"
       - "setenv bootarg.sim.vdevinit {{vdevinit}}"
       - "boot_ontap"
-      - " " # this final space is here to force the enter key after the preceding command
+      - "" # this is here to force the enter key after the preceding command
   - name: Wait for VMware tools to become available
     community.vmware.vmware_guest_tools_wait:
       <<: *esxi_login
@@ -138,7 +138,7 @@
       - "{{ontap_node_mgmt_ip}}"
       - "{{ontap_netmask}}"
       - "{{ontap_gateway}}"
-      - " " # this completes the node setup phase
+      - "" # this completes the node setup phase
     when: ontap_node_mgmt_ip != ""
 
 
