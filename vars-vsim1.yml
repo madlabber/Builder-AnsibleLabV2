@@ -3,7 +3,7 @@
 vsim_ova: './OVA/vsim-netapp-DOT9.8-cm_nodar.ova'
 
 # VM Name shown in vCenter inventory
-vm_name: lab_ansible_v2_vsim2
+vm_name: lab_ansible_v2_vsim4
 
 # For ESX Deployment 8GB is suggested
 #vm_memory_mb: 8192 
@@ -30,12 +30,12 @@ vdevinit: "31:14:0,31:14:1,31:14:2,31:14:3" # (56x4gb 15k) 
 
 # Node Management IP Address
 # If specified the IP/Netmask/gateway will be assigned to the node
-ontap_node_mgmt_ip: "192.168.0.81"
+ontap_node_mgmt_ip: "192.168.0.41"
 ontap_netmask: "255.255.255.0"
 ontap_gateway: "192.168.0.1" 
 
 # These additional items are required by cluster setup
-ontap_cluster_mgmt_ip: 192.168.0.80
+ontap_cluster_mgmt_ip: 192.168.0.40
 ontap_cluster_name: demo
 ontap_password: P@ssw0rd
 ontap_dns_domain: lab.local

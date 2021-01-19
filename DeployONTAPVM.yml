@@ -95,6 +95,10 @@
     delay: 15
     register: result           
     until: result is succeeded 
+  - name: Wait for 30 seconds for Startup to Complete
+    wait_for: timeout=30
+    delegate_to: localhost
+    when: ontap_node_mgmt_ip != ""
   - name: Reboot-Guest #this is to help ensure we land at the setup script
     community.vmware.vmware_guest_powerstate:
       <<: *esxi_login 

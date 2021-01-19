@@ -84,8 +84,12 @@
       - "{{ontap_password}}"
       - "{{ontap_password}}" # confirm password
       - "{{ontap_cluster_name}}"
-      - "" # this final space is here to force the enter key after the preceding command
-
+  - name: Press Enter
+    community.vmware.vmware_guest_sendkey:
+      <<: *esxi_login
+      name: "{{ vm_name }}"
+      keys_send: ENTER
+    delegate_to: localhost
   - name: Wait 120 seconds for cluster setup
     wait_for: timeout=120
     delegate_to: localhost
@@ -98,7 +102,6 @@
       string_send: "{{item}}"
     delegate_to: localhost
     loop: 
-      - " " # Enter additional license keys
       - "e0c" # cluster mgmt port
       - "{{ontap_cluster_mgmt_ip}}"
       - "{{ontap_netmask}}"
