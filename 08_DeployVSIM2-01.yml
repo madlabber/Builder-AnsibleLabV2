@@ -1,0 +1,9 @@
+---
+- name: Create ONTAP VM - vsim1
+  hosts: localhost
+  gather_facts: no
+  tasks: 
+  - include_vars: vars-vsim1.yml 
+  - include_vars: vars-esx.yml
+- import_playbook: DeployONTAPVM.yml
+- import_playbook: ConfigureVSIM.yml
