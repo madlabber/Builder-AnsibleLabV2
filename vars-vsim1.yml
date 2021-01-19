@@ -1,0 +1,46 @@
+# Path to the Simulate ONTAP OVA File
+# Tested with 9.8, but 9.7 should also be compatible
+vsim_ova: './OVA/vsim-netapp-DOT9.8-cm_nodar.ova'
+
+# VM Name shown in vCenter inventory
+vm_name: lab_ansible_v2_vsim2
+
+# For ESX Deployment 8GB is suggested
+#vm_memory_mb: 8192 
+
+# The 'cluster network' portgroup name for e0a and e0b
+cluster_network: lab_ansible_v2_1
+
+# The 'data network' portgroup name for e0c and e0d
+data_network: lab_ansible_v2_1
+
+# The serial number must be unique for each within a multi-node cluster
+# The serial number must correspond to an available set of license keys
+# The two current options are 408236-50-7, or 4034389-06-2
+# Note: the sysid is randomized by the playbook
+sys_serial_number: "4082368-50-7" 
+
+# Virtual (simulated) Disk Devices to create during init
+# type:qty:shelf,type:qty:shelf,type:qty:shelf,type:qty:shelf
+# Shelved 0-3 may be populated
+# vdevinit: "23:14:0,23:14:1" # 28x1gb disks (default)
+# vdevinit: "23:14:0,23:14:1,23:14:2,23:14:3" # 56x1gb disks
+# vdevinit: "23:14:0,23:14:1,32:14:2,34:14:3" # (28x1gb 15k+14x2gb 7.2k+14x100mb SSD) - hybrid config
+vdevinit: "31:14:0,31:14:1,31:14:2,31:14:3" # (56x4gb 15k)  
+
+# Node Management IP Address
+# If specified the IP/Netmask/gateway will be assigned to the node
+ontap_node_mgmt_ip: "192.168.0.81"
+ontap_netmask: "255.255.255.0"
+ontap_gateway: "192.168.0.1" 
+
+# These additional items are required by cluster setup
+ontap_cluster_mgmt_ip: 192.168.0.80
+ontap_cluster_name: demo
+ontap_password: P@ssw0rd
+ontap_dns_domain: lab.local
+ontap_dns_server: 192.168.0.1
+ontap_location: "virtual_lab"
+
+
+
