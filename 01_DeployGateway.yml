@@ -1,0 +1,8 @@
+---
+- name: Create pfSense VM - gateway
+  hosts: localhost
+  gather_facts: no
+  tasks: 
+  - include_vars: vars-gateway.yml 
+  - include_vars: vars/vars-esx.yml
+- import_playbook: DeploypfSenseVM.yml

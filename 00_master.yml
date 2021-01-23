@@ -6,9 +6,15 @@
   import_playbook: 01_DeployDC1.yml
 - name: Configure Active Directory
   import_playbook: 02_BuildAD.yml
+- name: Deploy VM - Ansible
+  import_playbook: 05_DeployAnsible.yml
 - name: Deploy VM - CentOS1
   import_playbook: 03_DeployCentOS1.yml
 - name: Deploy VM - Win1
   import_playbook: 04_DeployWin1.yml
-- name: Deploy VM - Tower
-  import_playbook: 05_DeployTower.yml
+- name: Deploy VM - VSIM1
+  import_playbook: 07_DeployVSIM1.yml
+- name: Deploy VM - VSIM2-01
+  import_playbook: 08_DeployVSIM2-01.yml
+- name: Deploy VM - VSIM2-02
+  import_playbook: 09_DeployVSIM2-02.yml

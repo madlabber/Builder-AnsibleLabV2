@@ -1,9 +1,19 @@
 ---
-- name: Create ONTAP VM - vsim1
+- name: Create ONTAP VM - vsim2-02
   hosts: localhost
-  gather_facts: no
-  tasks: 
-  - include_vars: vars-vsim1.yml 
-  - include_vars: vars-esx.yml
-- import_playbook: DeployONTAPVM.yml
-- import_playbook: ConfigureVSIM.yml
+  gather_facts: false
+  vars_files: 
+    - vars/vars-esx.yml
+    - defaults/ONTAPvsim.yml
+  tasks:
+    - name: Deploy an ONTAP vsim
+      set_fact:
+        vm_name: lab_ansible_v2_vsim2-02
+        vm_datastore: lab_ansible_v2
+        sys_serial_number: "4034389-06-2"
+        cluster_network: lab_ansible_v2_1
+        data_network: lab_ansible_v2_1
+        ontap_node_mgmt_ip: "192.168.0.92"
+        ontap_netmask: "255.255.255.0"
+        ontap_gateway: "192.168.0.1"
+    - include_tasks: "tasks/DeployONTAPvsim.yml"

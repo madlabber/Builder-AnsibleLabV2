@@ -1,8 +1,0 @@
----
-- name: Create Centos VM - Centos1
-  hosts: localhost
-  gather_facts: no
-  tasks: 
-  - include_vars: vars-centos1.yml 
-  - include_vars: vars-esx.yml
-- import_playbook: DeployCentOSVM.yml

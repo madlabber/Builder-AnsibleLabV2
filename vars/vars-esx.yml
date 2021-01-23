@@ -1,7 +1,10 @@
+# This set of playbooks current targets an esx host directly
 esxi_address: 192.168.123.49
 esxi_username: root
 esxi_password: P@ssw0rd
 esxi_fqdn: esx49.schlab.pri
 esxi_datastore: lab_ansible_v2
 iso_datastore: "ISOs"
+vm_network: "VM Network"
+vm_datastore: "datastore1"
 
