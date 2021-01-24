@@ -1,13 +1,28 @@
-# This set of playbooks current targets an esx host directly
-vcenter_address: labvc01.schlab.pri
+# If there is no vcenter, use the esxi host crendentials 
+# to complete the vcenter variables
+vcenter_address: labvc01.schlab.pri # esxi ip addrees for standalone hosts
+vcenter_username: administrator@vsphere.local
+vcenter_password: P@ssw0rd
+
+# If there is no vcenter, use 'ha-datacenter'
+vcenter_datacenter: Datacenter 
+
+# Credentials for a host with access to the datastore
+# Used when ISOs are missing from the ISO datastore
 esxi_address: 192.168.123.49
 esxi_username: root
 esxi_password: P@ssw0rd
-esxi_fqdn: esx49.schlab.pri
-esxi_datastore: lab_ansible_v2
+
+# If there is a vcenter, this must match the host's name in vcenter inventory
+# if there is no vcenter, the name can be the IP address
+esxi_hostname: "esx49.schlab.pri"
+
+# Default datastore for new VMs
+vm_datastore: "TestVMs"
+
+# Default datastore for ISO files
 iso_datastore: "ISOs"
+
+# Default portgroup for new VMs
 vm_network: "VM Network"
-vm_datastore: "Staging"
-
-
 
