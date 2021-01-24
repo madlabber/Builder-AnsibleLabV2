@@ -47,6 +47,9 @@
     state: poweredon
     wait_for_ip_address: false
   delegate_to: localhost
+- name: Pause for 3 seconds
+  pause:
+    seconds: 3
 - name: Press Space to interrupt autoboot
   community.vmware.vmware_guest_sendkey:
     hostname: '{{ esxi_address }}'

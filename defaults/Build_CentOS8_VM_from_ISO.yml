@@ -1,7 +1,7 @@
 install_iso: "CentOS-8.3.2011-x86_64-dvd1.iso"
 install_iso_url: "https://mirrors.xtom.com/centos/8.3.2011/isos/x86_64/CentOS-8.3.2011-x86_64-dvd1.iso"
 config_iso: "{{vm_name}}-ks.iso"
-kickstart_file: "./OEMDRV/ks.cfg"
+kickstart_file: "files/CentOS8/ks.cfg"
 vm_name: centos8vm
 vm_hostname: centos8
 vm_password_old: Changeme!
