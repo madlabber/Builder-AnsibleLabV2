@@ -4,12 +4,12 @@
     nvram_sysid: "4082{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}{{ 9 | random(start=0) }}07" #the two current options are 408236507, or 4034389062
   when: nvram_sysid == ""
 - vmware_deploy_ovf:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
-#      datacenter: 'lab_ansible_v2'
-#      cluster: '{{ vcenter_cluster }}'
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{ vcenter_cluster }}'
     datastore: "{{vm_datastore}}"
     name: "{{vm_name}}"
     ovf: "{{vsim_ova}}"
@@ -24,9 +24,9 @@
   until: result is succeeded 
 - name: Adjust VM Sizing
   vmware_guest:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: '{{ vm_name }}'
     state: present
@@ -39,22 +39,22 @@
   delegate_to: localhost
 - name: Start VM
   vmware_guest:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: '{{ vm_name }}'
     state: poweredon
     wait_for_ip_address: false
   delegate_to: localhost
-- name: Pause for 3 seconds
+- name: Pause for 5 seconds
   pause:
-    seconds: 3
+    seconds: 5
 - name: Press Space to interrupt autoboot
   community.vmware.vmware_guest_sendkey:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: "{{ vm_name }}"
     keys_send: '{{item}}'
@@ -63,9 +63,9 @@
 
 - name: configure loader variable via sendkeys
   community.vmware.vmware_guest_sendkey:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: "{{ vm_name }}"
     keys_send: ENTER
@@ -81,9 +81,9 @@
 
 - name: Wait for VMware tools to become available
   community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
     validate_certs: no 
     name: '{{ vm_name }}'
   delegate_to: localhost
@@ -98,9 +98,9 @@
 
 - name: Complete Node Setup
   community.vmware.vmware_guest_sendkey:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'     
     validate_certs: no 
     name: "{{ vm_name }}"
     keys_send: ENTER

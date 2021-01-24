@@ -96,9 +96,10 @@
   community.vmware.vmware_guest:
     hostname: '{{ vcenter_address }}'
     username: '{{ vcenter_username }}'
-    password: '{{ vcenter_password }}'    
+    password: '{{ vcenter_password }}' 
     validate_certs: no 
     datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'    
     folder: /
     name: '{{ vm_name }}'
     state: present

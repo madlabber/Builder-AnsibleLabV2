@@ -8,7 +8,7 @@
     - name: Build a Windows VM
       include_vars: defaults/Build_Windows_VM_from_ISO.yml
     - set_fact:
-        vm_name: TEST_WindowsVM
+        vm_name: TEST_WindowsVMvc
         # vm_num_cpus: 2        
         # vm_memory_mb: 2048   
         # vm_disk_gb: 40            

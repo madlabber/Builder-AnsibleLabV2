@@ -9,21 +9,21 @@
     vol_ident: OEMDRV
 - name: Copy kickstart iso to datastore
   community.vmware.vsphere_copy:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'  
     validate_certs: no 
     src: "files/{{config_iso}}"
-#      datacenter: DC1 Someplace
+    datacenter: "{{vcenter_datacenter}}"
     datastore: "{{ vm_datastore }}"
     path: "{{config_iso}}"
   delegate_to: localhost
   ignore_errors: true #if the playbook is being re-run while the vm is on, the iso cannot be replaced
 - name: Check if install ISO exists
   community.vmware.vsphere_file:
-    host: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no
     datacenter: ""
     datastore: "{{ iso_datastore }}"
@@ -42,11 +42,11 @@
   when: install_iso_exists.failed
 - name: Enable ESX SSH (TSM-SSH)
   community.vmware.vmware_host_service_manager:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no 
-    esxi_hostname: '{{ esxi_address }}'
+    esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM-SSH
     state: present
   register: tsm_ssh_service
@@ -54,11 +54,11 @@
   when: install_iso_exists.failed
 - name: Enable ESX Shell (TSM)
   community.vmware.vmware_host_service_manager:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
-    esxi_hostname: '{{ esxi_address }}'
+    esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM
     state: present
   register: tsm_service
@@ -72,32 +72,34 @@
   when: install_iso_exists.failed
 - name: Disable ESX SSH (TSM-SSH)
   community.vmware.vmware_host_service_manager:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
-    esxi_hostname: '{{ esxi_address }}'
+    esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM-SSH
     state: absent
   delegate_to: localhost
   when: tsm_ssh_service.changed
 - name: Disable ESX Shell (TSM)
   community.vmware.vmware_host_service_manager:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no 
-    esxi_hostname: '{{ esxi_address }}'
+    esxi_hostname: '{{ esxi_hostname }}'
     service_name: TSM
     state: absent
   delegate_to: localhost
   when: tsm_service.changed
 - name: Create VM
   community.vmware.vmware_guest:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no 
+    datacenter: "{{vcenter_datacenter}}"
+    cluster: '{{vcenter_cluster}}'    
     folder: /
     name: '{{ vm_name }}'
     state: present
@@ -129,9 +131,9 @@
   register: deploy_vm
 - name: Set boot order
   community.vmware.vmware_guest_boot_manager:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no  
     name: '{{ vm_name }}'
     boot_delay: 1000
@@ -149,9 +151,9 @@
   register: vm_boot_order
 - name: Power-On the virtual machine
   community.vmware.vmware_guest_powerstate:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: '{{ vm_name }}'
     state: powered-on
@@ -159,9 +161,9 @@
   register: powerstate
 - name: Wait for VMware tools to become available 
   community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no 
     name: '{{ vm_name }}'
   delegate_to: localhost
@@ -171,9 +173,9 @@
   until: result is succeeded
 - name: Set root Passwd
   community.vmware.vmware_vm_shell:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     vm_username: "root"
     vm_password: '{{ vm_password_old }}'
@@ -185,9 +187,9 @@
   ignore_errors: yes   
 - name: Run shell command via vm_shell
   community.vmware.vmware_vm_shell:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no 
     vm_username: "root"
     vm_password: '{{ vm_password_new }}'
@@ -203,9 +205,9 @@
     - "-c \"nmcli connection modify {{vm_eth_name}} IPv4.dns {{vm_dns_server}}\""
 - name: Reboot-Guest
   community.vmware.vmware_guest_powerstate:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'   
     validate_certs: no  
     name: '{{ vm_name }}'
     state: reboot-guest
@@ -216,9 +218,9 @@
   delegate_to: localhost
 - name: Wait for VMware tools to become available by name
   community.vmware.vmware_guest_tools_wait:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     name: '{{ vm_name }}'
   delegate_to: localhost
@@ -231,9 +233,9 @@
   delegate_to: localhost
 - name: Find the VM's IP Address via VMware tools
   community.vmware.vmware_guest_info:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'   
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}'    
     validate_certs: no 
     datacenter: ha-datacenter
     name: '{{ vm_name }}'

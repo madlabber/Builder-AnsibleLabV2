@@ -1,20 +1,9 @@
 ---
-# - name: Create new Active-Directory Domain & Forest
-#   hosts: localhost
-#   vars:
-#     vm_name: lab_ansible_v2_dc01
-#     vm_password: P@ssw0rd
-#     vm_dns_server: 192.168.0.1
-#     vm_domain: lab.local
-#   vars_files:
-#    - vars-esx.yml
-#   gather_facts: no
-#   tasks:
 - name: Prepare for DCPromo
   community.vmware.vmware_vm_shell:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: "{{ vm_password }}"
@@ -39,9 +28,9 @@
 
 - name: Create Domain
   community.vmware.vmware_vm_shell:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: "{{ vm_password }}"
@@ -60,9 +49,9 @@
 
 - name: Reboot-Guest
   vmware_guest_powerstate:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}' 
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no
     name: '{{ vm_name }}'
     state: reboot-guest
@@ -73,9 +62,9 @@
   delegate_to: localhost
 - name: Wait for VMware tools to become available by name
   vmware_guest_tools_wait:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no
     name: '{{ vm_name }}'
   delegate_to: localhost
@@ -89,9 +78,9 @@
 
 - name: Perform additional configuration steps
   community.vmware.vmware_vm_shell:
-    hostname: '{{ esxi_address }}'
-    username: '{{ esxi_username }}'
-    password: '{{ esxi_password }}'
+    hostname: '{{ vcenter_address }}'
+    username: '{{ vcenter_username }}'
+    password: '{{ vcenter_password }}' 
     validate_certs: no
     vm_username: "{{vm_username}}"
     vm_password: "{{ vm_password }}"
@@ -112,32 +101,7 @@
     # re-add the remote desktop firewall fule
     - "-command \"(Enable-NetFirewallRule -DisplayGroup 'Remote Desktop')\""
 
-##############################
-# Config / Integration Steps #
-##############################
+# scriptlet for adding dns records
 #Add-DnsServerResourceRecordA -Name "host23" -ZoneName "contoso.com" -AllowUpdateAny -IPv4Address "172.18.99.23" -TimeToLive 01:00:00
-  # - name: Create DNS record for ESXi
-  #   win_dns_record:
-  #     name: '{{ esxi_hostname }}'
-  #     type: "A"
-  #     state: present
-  #     value: '{{ esxi_address }}'
-  #     zone: '{{ lab_domain }}'
-  #   delegate_to: "{{ dc_address }}"
-  # - name: Create DNS record for vCenter
-  #   win_dns_record:
-  #     name: '{{ vcenter_hostname }}'
-  #     type: "A"
-  #     state: present
-  #     value: '{{ vcenter_address }}'
-  #     zone: '{{ lab_domain }}'
-  #   delegate_to: "{{ dc_address }}"
-  # - name: Create DNS record for ONTAP
-  #   win_dns_record:
-  #     name: '{{ ontap_hostname }}'
-  #     type: "A"
-  #     state: present
-  #     value: '{{ ontap_address }}'
-  #     zone: '{{ lab_domain }}'
-  #   delegate_to: "{{ dc_address }}"
+
 

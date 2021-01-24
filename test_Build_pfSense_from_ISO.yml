@@ -8,7 +8,7 @@
     - name: Create pfSense VM - gateway
       include_vars: defaults/Build_pfSense_from_ISO.yml
     - set_fact:
-        vm_name: TEST_pfsense
+        vm_name: TEST_pfsense2
         vm_password_new: P@ssw0rd
         vm_network_wan: "VM Network"
         vm_network_lan: "lab_ansible_v2_2"
